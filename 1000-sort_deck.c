@@ -3,60 +3,56 @@
 #include <string.h>
 
 /**
- * compare_cards - Compare function for qsort.
- * @a: Pointer to the first card.
- * @b: Pointer to the second card.
+ * compare_cards - Compare function for qsort to compare two card_t objects
+ * @a: Pointer to the first card_t
+ * @b: Pointer to the second card_t
  *
- * Return: Integer less than, equal to, or greater than zero if a is found,
- * respectively, to be less than, to match, or be greater than b.
+ * Return: Negative value if a < b, 0 if a == b, positive value if a > b
  */
 int compare_cards(const void *a, const void *b)
 {
-	const card_t *card_a = (*(deck_node_t **)a)->card;
-	const card_t *card_b = (*(deck_node_t **)b)->card;
-	int value_cmp = strcmp(card_a->value, card_b->value);
+	const card_t *card_a = (*(const deck_node_t **)a)->card;
+	const card_t *card_b = (*(const deck_node_t **)b)->card;
 
-	if (value_cmp != 0)
-		return (value_cmp);
-
+	if (card_a->kind != card_b->kind)
 	return (card_a->kind - card_b->kind);
+	return (strcmp(card_a->value, card_b->value));
 }
 
 /**
- * sort_deck - Sorts a deck of cards.
- * @deck: Pointer to the head of the deck.
+ * sort_deck - Sorts a deck of cards in ascending order by kind and value
+ * @deck: Pointer to a pointer to the head of the deck
  */
 void sort_deck(deck_node_t **deck)
 {
-	size_t i, len = 0;
+	size_t count = 0;
 	deck_node_t *current = *deck;
-	deck_node_t **array;
+	deck_node_t **deck_array;
+	size_t i;
 
-	if (deck == NULL || *deck == NULL)
-		return;
-
-	while (current != NULL)
+	while (current)
 	{
-		len++;
+		count++;
 		current = current->next;
 	}
-	array = malloc(len * sizeof(deck_node_t *));
-	if (array == NULL)
-		return;
+	deck_array = malloc(count * sizeof(deck_node_t *));
+	if (!deck_array)
+	exit(EXIT_FAILURE);
 
 	current = *deck;
-	for (i = 0; i < len; i++)
+	for (i = 0; i < count; i++)
 	{
-		array[i] = current;
+		deck_array[i] = current;
 		current = current->next;
 	}
-	qsort(array, len, sizeof(deck_node_t *), compare_cards);
-	*deck = array[0];
-	for (i = 0; i < len - 1; i++)
+
+	qsort(deck_array, count, sizeof(deck_node_t *), compare_cards);
+
+	for (i = 0; i < count; i++)
 	{
-		array[i]->next = array[i + 1];
-		array[i + 1]->prev = array[i];
+		deck_array[i]->prev = (i > 0) ? deck_array[i - 1] : NULL;
+		deck_array[i]->next = (i < count - 1) ? deck_array[i + 1] : NULL;
 	}
-	array[len - 1]->next = NULL;
-	free(array);
+	*deck = deck_array[0];
+	free(deck_array);
 }
